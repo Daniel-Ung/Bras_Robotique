@@ -1,0 +1,47 @@
+<resources>
+    <!-- Nom de l'application -->
+    <string name="app_name">Bras Robotisé App</string>
+
+    <!-- Message par défaut affiché dans le champ de statut -->
+    <string name="txt_status_default">En attente d une commande..</string>
+
+    <!-- Commandes directionnelles -->
+    <string name="btn_haut">HAUT</string>              <!-- Bouton vers le haut -->
+    <string name="btn_bas">BAS</string>                <!-- Bouton vers le bas -->
+    <string name="btn_gauche">GAUCHE</string>          <!-- Bouton vers la gauche -->
+    <string name="btn_droite">DROITE</string>          <!-- Bouton vers la droite -->
+    <string name="btn_stop">STOP</string>              <!-- Bouton arrêt -->
+
+    <!-- Commandes de la pince (mouvements gauche/droite) -->
+    <string name="btn_pince_gauche">PINCE GAUCHE</string>
+    <string name="btn_pince_droite">PINCE DROITE</string>
+
+    <!-- Commandes du poignet (haut/bas) -->
+    <string name="btn_poignet_haut">POIGNET HAUT</string>
+    <string name="btn_poignet_bas">POIGNET BAS</string>
+
+    <!-- Commandes pour ouvrir/fermer la pince -->
+    <string name="btn_pince_open">OUVRIR PINCE</string>
+    <string name="btn_pince_close">FERMER PINCE</string>
+
+    <!-- Commandes de l’avant-bras -->
+    <string name="btn_avb_up">AVANT BRAS HAUT</string>
+    <string name="btn_avb_down">AVANT BRAS BAS</string>
+
+    <!-- Bouton de réinitialisation -->
+    <string name="btn_reset">RESET</string>
+
+    <!-- Message dynamique affiché lorsqu'une commande est envoyée -->
+    <string name="commande_envoyee">Commande envoyée : %s</string>
+
+    <!-- Message affiché après réinitialisation -->
+    <string name="reset_message">Réinitialisé</string>
+
+
+
+    <string name="seq_running">Séquence automatique en cours...</string>
+    <string name="seq_done">Séquence terminée</string>
+    <string name="video_error">Erreur de chargement du flux vidéo</string>
+    <string name="empty_input_warning">Veuillez entrer une commande</string>
+
+</resources>
