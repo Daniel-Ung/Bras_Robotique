@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Conteneur principal vertical -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp">
+
+        <!-- Affichage du statut (texte en haut) -->
+        <TextView
+            android:id="@+id/status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/txt_status_default"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:paddingBottom="24dp" />
+
+        <!-- Affichage du flux vidéo (WebView) -->
+        <WebView
+            android:id="@+id/videoWebView"
+            android:layout_width="325dp"
+            android:layout_height="267dp"
+            android:layout_marginTop="16dp" />
+
+        <!-- Commandes directionnelles (↑ ← STOP → ↓) -->
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:columnCount="3"
+            android:rowCount="3"
+            android:alignmentMode="alignMargins"
+            android:layout_gravity="center"
+            android:padding="10dp">
+
+            <!-- Ligne 1 -->
+            <Space android:layout_width="70dp" android:layout_height="70dp" />
+            <Button
+                android:id="@+id/up"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:text="↑"
+                android:textSize="20sp" />
+            <Space android:layout_width="70dp" android:layout_height="70dp" />
+
+            <!-- Ligne 2 -->
+            <Button
+                android:id="@+id/left"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:text="←"
+                android:textSize="20sp" />
+            <Button
+                android:id="@+id/stop"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:text="STOP"
+                android:textSize="8sp" />
+            <Button
+                android:id="@+id/right"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:text="→"
+                android:textSize="20sp" />
+
+            <!-- Ligne 3 -->
+            <Space android:layout_width="70dp" android:layout_height="70dp" />
+            <Button
+                android:id="@+id/down"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:text="↓"
+                android:textSize="20sp" />
+        </GridLayout>
+
+        <!-- Contrôle de l’avant-bras et du poignet -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="2dp">
+
+            <Button
+                android:id="@+id/avbUp"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_marginEnd="1dp"
+                android:text="AVB ↑"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/wristDown"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_marginEnd="1dp"
+                android:text="PGN ↓"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/wristUp"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:layout_marginEnd="1dp"
+                android:text="PGN ↑"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/avbDown"
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                android:text="AVB ↓"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <!-- Contrôle horizontal de la pince -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/pinLeft"
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:text="Pince ←"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/pinOpen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ouvrir Pince"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/pinRight"
+                android:layout_width="95dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="Pince →"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- Ligne avec "Fermer Pince" + "Programme automatique" -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="10dp">
+
+            <Button
+                android:id="@+id/pinClose"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fermer Pince"
+                android:textSize="16sp"
+                android:layout_marginEnd="16dp" />
+
+            <Button
+                android:id="@+id/autoSequence"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Programme"
+                android:textSize="16sp" />
+        </LinearLayout>
+
+        <!-- Bouton RESET général -->
+        <Button
+            android:id="@+id/reset"
+            android:layout_width="138dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="RESET" />
+
+        <!-- Champ texte pour commande personnalisée -->
+        <EditText
+            android:id="@+id/commandInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:hint="Entrez votre commande..."
+            android:minHeight="48dp"
+            android:padding="8dp" />
+
+        <!-- Bouton d’envoi de la commande texte -->
+        <Button
+            android:id="@+id/sendTextCmd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Envoyer"
+            android:layout_marginTop="10dp" />
+
+    </LinearLayout>
+</ScrollView>
