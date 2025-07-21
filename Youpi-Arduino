@@ -1,0 +1,168 @@
+
+// Déclaration des broches d’entrée analogique et numériques
+int analogInPin = A0;     // Capteur analogique pour détecter la position initiale du bras
+int autofeed = A1;        // Contrôle de l’alimentation automatique de l’imprimante (non utilisé dans le robot)
+int iniprinter = A2;      // Signal d’initialisation de l’imprimante (non utilisé ici)
+int selectinput = A3;     // Sélection de l’entrée de l’imprimante (non utilisé ici)
+
+int sensorValue = 0;      // Variable pour stocker la valeur analogique lue (0 à 1023)
+
+// Définition des broches numériques utilisées pour commander les moteurs via un registre à décalage
+int bit_01 = 3;           // Ligne de données 1 (correspond à un moteur ou action spécifique)
+int bit_02 = 4;           // Ligne de données 2
+int bit_03 = 5;           // Ligne de données 3
+int bit_04 = 6;           // Ligne de données 4
+int bit_05 = 7;           // Ligne de données 5
+int bit_06 = 8;           // Ligne de données 6
+int bit_07 = 9;           // CLOCK : génère une impulsion pour envoyer les bits
+int bit_08 = 10;          // LATCH : valide les bits envoyés vers les moteurs
+int STROBE = 13;          // Entrée de validation : si LOW, les moteurs peuvent recevoir des commandes
+
+// Définition des instructions moteur sous forme binaire (3 bits utiles : bits 01 à 03)
+// Chaque constante représente un type de mouvement ou une articulation
+const byte BASE = 0b000;                       // Commande pour faire tourner la base
+const byte EPAULE_HAUT = 0b100;                // Commande pour lever l’épaule
+const byte EPAULE_BAS = 0b100;                 // Commande pour baisser l’épaule (même code que haut : sens défini séparément)
+const byte COUDE_HAUT = 0b010;                 // Lever le coude
+const byte COUDE_BAS = 0b010;                  // Baisser le coude
+const byte POIGNET_BAS = 0b110;                // Abaisser le poignet
+const byte POIGNET_HAUT = 0b110;               // Lever le poignet
+const byte ROTATION_POIGNET_GAUCHE = 0b001;    // Tourner le poignet vers la gauche
+const byte ROTATION_POIGNET_DROITE = 0b001;    // Tourner le poignet vers la droite
+const byte PINCE_OUVERT = 0b101;               // Ouvrir la pince
+const byte PINCE_FERMER = 0b101;               // Fermer la pince
+
+// Fonction d’initialisation du microcontrôleur
+void setup() {
+  // Configure les broches de bit_01 à bit_08 comme des sorties (vers les moteurs)
+  for (int i = bit_01; i <= bit_08; i++) pinMode(i, OUTPUT);
+
+  // Configure la broche STROBE comme une entrée (indique si le robot est prêt)
+  pinMode(STROBE, INPUT);
+
+  // Configuration des broches d’imprimante comme sorties et initialisation à LOW
+  pinMode(autofeed, OUTPUT); digitalWrite(autofeed, LOW);
+  pinMode(iniprinter, OUTPUT); digitalWrite(iniprinter, LOW);
+  pinMode(selectinput, OUTPUT); digitalWrite(selectinput, LOW);
+
+  // Configure la broche de capteur analogique comme une entrée
+  pinMode(analogInPin, INPUT);
+
+  // Initialise la communication série à 9600 bauds pour lire les commandes
+  Serial.begin(9600);
+
+  // Si le STROBE est à LOW (robot prêt), envoie une séquence d’initialisation moteur
+  if (digitalRead(STROBE) == LOW) {
+    set_Bits(0b11100010); // Active moteurs correspondants aux bits 01, 02, 03, 07
+    delay(100);           // Attend 100 millisecondes
+    set_Bits(0);          // Réinitialise tous les moteurs (arrêt)
+    delay(400);           // Attend 400 ms pour laisser le système se stabiliser
+  }
+}
+
+// Boucle principale qui écoute les commandes envoyées via le port série
+void loop() {
+  if (Serial.available()) {
+    char command = Serial.read();     // Lit un caractère de commande
+    Serial.println(command);          // Affiche la commande reçue
+
+    // Interprétation de la commande et exécution du mouvement associé
+    switch (command) {
+      case 'B': sens_rotation(HIGH); moteur_mov(300, BASE); break;            // Tourne la base à gauche
+      case 'b': sens_rotation(LOW);  moteur_mov(300, BASE); break;            // Tourne la base à droite
+      case 'E': sens_rotation(HIGH); moteur_mov(300, EPAULE_BAS); break;      // Abaisse l’épaule
+      case 'e': sens_rotation(LOW);  moteur_mov(300, EPAULE_HAUT); break;     // Lève l’épaule
+      case 'C': sens_rotation(HIGH); moteur_mov(300, COUDE_HAUT); break;      // Lève le coude
+      case 'c': sens_rotation(LOW);  moteur_mov(300, COUDE_BAS); break;       // Abaisse le coude
+      case 'm': sens_rotation(LOW);  moteur_mov(300, POIGNET_HAUT); break;    // Lève le poignet
+      case 'M': sens_rotation(HIGH); moteur_mov(300, POIGNET_BAS); break;     // Abaisse le poignet
+      case 'r': sens_rotation(HIGH); moteur_mov(300, ROTATION_POIGNET_GAUCHE); break;  // Poignet vers gauche
+      case 'R': sens_rotation(LOW);  moteur_mov(300, ROTATION_POIGNET_DROITE); break; // Poignet vers droite
+      case 'o': sens_rotation(HIGH); moteur_mov(300, PINCE_FERMER); break;    // Ferme la pince
+      case 'O': sens_rotation(LOW);  moteur_mov(300, PINCE_OUVERT); break;    // Ouvre la pince
+
+      case 'I': position_initiale(); break;     // Recalibrage position de base uniquement
+
+      case 'S': // Pause des moteurs
+        Serial.println("Pause de 3 secondes...");
+        set_Bits(0);    // Arrête tous les moteurs
+        delay(3000);    // Pause de 3 secondes
+        Serial.println("Reprise");
+        break;
+    }
+  }
+}
+
+// Fonction pour exécuter un mouvement moteur donné pendant un temps (degré)
+void moteur_mov(int degre, byte val) {
+  // Extraction des bits 2-1-0 (HIGH ou LOW) à partir du byte de commande moteur
+  byte val_1 = (val & 0b100) ? HIGH : LOW; // Vérifie le bit 2 (le 3eme bit). Si 1 → val_1 = HIGH, sinon LOW.
+  byte val_2 = (val & 0b010) ? HIGH : LOW; // Vérifie le bit 1 (le 2er bit). Si 1 → val_2 = HIGH , sinon LOW.
+  byte val_3 = (val & 0b001) ? HIGH : LOW; // Vérifie le bit 0 (le 1er bit). Si 1 → val_3 = HIGH, sinon LOW.
+
+  if (digitalRead(STROBE) == LOW) {  // Vérifie si les moteurs peuvent être activés
+    for (int i = 0; i < degre; i++) {
+      // Envoie les bits de commande sur les lignes 1 à 3
+      digitalWrite(bit_01, val_1);
+      digitalWrite(bit_02, val_2);
+      digitalWrite(bit_03, val_3);
+      // Met les autres lignes à LOW
+      digitalWrite(bit_04, LOW);
+      digitalWrite(bit_05, LOW);
+      digitalWrite(bit_06, LOW);
+      // Pulse sur CLOCK (bit_07)
+      digitalWrite(bit_07, HIGH);
+      // Prépare le LATCH (bit_08 à LOW ici)
+      digitalWrite(bit_08, LOW);
+      digitalWrite(bit_07, LOW);       // Fin du CLOCK
+      delayMicroseconds(700);         // Très court délai pour permettre la mise à jour
+    }
+  }
+}
+
+// Fonction qui définit le sens de rotation du moteur (sens horaire / antihoraire)
+void sens_rotation(int dir) {
+  if (digitalRead(STROBE) == HIGH) return;  //  Ne rien faire si robot non prêt
+
+  // Applique la direction (HIGH ou LOW) sur les 6 premiers bits
+  set_Bits((dir << 0) | (dir << 1) | (dir << 2) |
+           (dir << 3) | (dir << 4) | (dir << 5));
+
+  digitalWrite(bit_07, LOW);   // Réinitialise le CLOCK. Clock : Déclenche le passage au bit suivant
+  digitalWrite(bit_08, HIGH);  // Déclenchement du LATCH. Latch : Applique le contenu complet aux sorties physiques
+  digitalWrite(bit_08, LOW);   // Fin du LATCH
+  delay(2);                 // Petite pause pour stabiliser les signaux
+}
+
+// Fonction pour remettre la base du bras en position initiale à partir d’un capteur analogique
+void position_initiale() {
+  sensorValue = analogRead(analogInPin);  // Lit la valeur actuelle du capteur (0 à 1023)
+
+  // La valeur retournée est comprise entre 0 et 1023 car l’entrée analogique est convertie en une valeur numérique sur 10 bits (2¹⁰ = 1024).
+
+  if (sensorValue == 0){
+    Serial.println("Pos init : 0");       // Le bras est complètement à gauche
+    while (analogRead(analogInPin) == 0) {
+      sens_rotation(LOW);                 // Tourne vers la droite jusqu’à sortir de cette zone
+      moteur_mov(100, BASE);
+    }
+  } else if (sensorValue >= 860) {
+    Serial.println("Pos init : 1023");    // Le bras est complètement à droite
+    while (analogRead(analogInPin) >= 860) {
+      sens_rotation(HIGH);                // Tourne vers la gauche jusqu’à atteindre la zone centrale
+      moteur_mov(100, BASE);
+    }
+  }
+}
+
+// Fonction utilitaire pour écrire rapidement un motif binaire sur les 8 bits de sortie
+void set_Bits(byte pattern) {
+  digitalWrite(bit_01, (pattern >> 0) & 1);  // Applique le bit 0 à la broche bit_01
+  digitalWrite(bit_02, (pattern >> 1) & 1);  // Applique le bit 1 à bit_02
+  digitalWrite(bit_03, (pattern >> 2) & 1);  // Applique le bit 2 à bit_03
+  digitalWrite(bit_04, (pattern >> 3) & 1);  // Applique le bit 3 à bit_04
+  digitalWrite(bit_05, (pattern >> 4) & 1);  // Applique le bit 4 à bit_05
+  digitalWrite(bit_06, (pattern >> 5) & 1);  // Applique le bit 5 à bit_06
+  digitalWrite(bit_07, (pattern >> 6) & 1);  // Applique le bit 6 à bit_07
+  digitalWrite(bit_08, (pattern >> 7) & 1);  // Applique le bit 7 à bit_08
+}
